@@ -4,7 +4,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from fluent.runtime import FluentLocalization
 import re
-import asyncio
 from .keyboards import *
 from .states import ChatForm
 from download_engine import catch_video, compile_available_streams, download_video, cleanup_temp_files
@@ -44,14 +43,20 @@ async def cmd_support(
     await state.clear()
 
 @common_router.callback_query(CallbackFactory.filter(F.action == 'technical_banner'))
+@common_router.callback_query(CallbackFactory.filter(F.action == 'support_chat'))
+@common_router.callback_query(CallbackFactory.filter(F.action == 'donate'))
+@common_router.message(Command(commands='donate'))
 async def cmd_technical(
-    event: types.CallbackQuery,
+    event: types.CallbackQuery | types.Message,
     state: FSMContext, 
     l10n: FluentLocalization   
 ):
     await state.clear()
-    await event.message.answer(text=l10n.format_value('technical-banner'))
-    await event.answer()
+    if isinstance(event, types.Message):
+        await event.answer(text=l10n.format_value('technical-banner'))
+    elif isinstance(event, types.CallbackQuery):
+        await event.message.answer(text=l10n.format_value('technical-banner'))
+        await event.answer()
 
 @common_router.callback_query(CallbackFactory.filter(F.action == 'reset'))
 async def cmd_reset(
@@ -62,6 +67,18 @@ async def cmd_reset(
     await state.clear()
     await event.message.answer(text=l10n.format_value('reset-banner'))
     await event.answer()
+
+
+@common_router.callback_query(CallbackFactory.filter(F.action == 'finish'))
+async def cmd_reset(
+    event: types.CallbackQuery,
+    state: FSMContext, 
+    l10n: FluentLocalization   
+):
+    await state.clear()
+    await event.message.answer(text=l10n.format_value('finish-banner'))
+    await event.answer()
+
 
 @common_router.message(
     F.text.lower().contains('youtube.com') | 
@@ -75,6 +92,7 @@ async def message_with_link(
     if catch_video(url=event.text):
         result = compile_available_streams(url=event.text)
         await state.update_data(
+            url = event.text,
             video_title=result.get('title'),
             streams=result.get('resolutions')
         )
@@ -105,8 +123,7 @@ async def callback_send_video(
     await callback.message.delete()
     await callback.answer()
     try:
-        # if selected_stream.video_codec and selected_stream.audio_codec:
-        video_path, width, height = await download_video(selected_stream, callback.from_user.id)
+        video_path, width, height = await download_video(selected_stream, callback.from_user.id, data.get('url'))
         
         await progress_message.edit_text(
             l10n.format_value('sending-video', {'resolution': selected_resolution})
@@ -114,20 +131,17 @@ async def callback_send_video(
 
         with open(video_path, 'rb') as video_file:
             await callback.message.answer_video(
+                reply_markup=complete_fab(),
                 video=types.FSInputFile(video_path),
                 width= width, height=height, supports_streaming=True,
                 caption=l10n.format_value('video-ready', {
                     'title': data.get('video_title'),
                     'resolution': selected_resolution
-                })
+                }), 
             )
         
-        # Удаляем сообщение о прогрессе
         await progress_message.delete()
-        
-        # Очищаем состояние
         await state.clear()
-
         cleanup_temp_files()
             
     except Exception as e:

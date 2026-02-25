@@ -3,7 +3,7 @@ import asyncio
 from aiogram import Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from bot.config import save_bot, save_dp, BotConfig
-from bot.common_handlers import common_router
+from bot.handlers.common_handlers import common_router
 from bot.middlewares import L10nMiddleware
 from bot.fluent_loader import get_fluent_localization
 
