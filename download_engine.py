@@ -99,8 +99,10 @@ def cleanup_temp_files():
         logging.info(f"Ошибка при очистке временных файлов: {e}")
 
 
-youtube = YouTube(url='https://www.youtube.com/shorts/yZYhiiEWWEM')
-for i,v in enumerate(youtube.streams.filter(res='720p')):
-    print(i, v)
-    print(v.height)
-    print(v.width)
+def main():
+    #For debug purposes
+    pass
+
+
+if __name__ == '__main__':
+    main()

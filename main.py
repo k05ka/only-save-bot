@@ -4,6 +4,8 @@ from aiogram import Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from bot.config import save_bot, save_dp, BotConfig
 from bot.handlers.common_handlers import common_router
+from bot.handlers.stars_handlers import stars_router
+from bot.handlers.support_handlers import support_router
 from bot.middlewares import L10nMiddleware
 from bot.fluent_loader import get_fluent_localization
 
@@ -16,6 +18,8 @@ def register_routes(dp: Dispatcher) -> None:
     Register routers for the dispatcher.
     """
     dp.include_router(common_router)
+    dp.include_router(stars_router)
+    dp.include_router(support_router)
 
 # Compile the bot's menu commands
 async def set_commands():
@@ -25,6 +29,7 @@ async def set_commands():
     commands = [
         BotCommand(command='start', description='🏁 В начало'),
         BotCommand(command='info', description='🆔 Информация'),
+        BotCommand(command='donate', description='⭐️ Поддержать проект'),
         BotCommand(command='support', description='🛟 Помощь'),
     ]
     await save_bot.set_my_commands(commands, BotCommandScopeDefault())

@@ -33,6 +33,26 @@ def complete_fab():
     return builder.as_markup()
 
 
+def donate_fab():
+    builder = InlineKeyboardBuilder()
+    builder.button(text='1⭐️', callback_data=CallbackFactory(action='pay', value=1))
+    builder.button(text='5⭐️', callback_data=CallbackFactory(action='pay', value=5))
+    builder.button(text='10⭐️', callback_data=CallbackFactory(action='pay', value=10))
+    builder.button(text='20⭐️', callback_data=CallbackFactory(action='pay', value=20))
+    builder.button(text='30⭐️', callback_data=CallbackFactory(action='pay', value=30))
+    builder.button(text='🔄 Reset', callback_data=CallbackFactory(action='reset'))
+    builder.adjust(4)
+    return builder.as_markup()
+
+
+def get_star_piece_fab(user_data):
+    builder = InlineKeyboardBuilder()
+    builder.button(text=f"Отправить {user_data} ⭐️", pay=True)
+    builder.button(text='🔄 Reset', callback_data=CallbackFactory(action='reset'))
+    builder.adjust(1)
+    return builder.as_markup()
+    
+
 def get_support_fab():
     builder = InlineKeyboardBuilder()
     builder.button(text="✉️ Задать вопрос", callback_data=CallbackFactory(action="support_chat"))
@@ -44,6 +64,6 @@ def get_support_fab():
 def get_continue_support_fab():
     builder = InlineKeyboardBuilder()
     builder.button(text="✉️Написать сообщение", callback_data=CallbackFactory(action='continue_support_chat'))
-    builder.button(text='❎ Закрыть вопрос', callback_data=CallbackFactory(action='on_main'))
+    builder.button(text='❎ Закрыть вопрос', callback_data=CallbackFactory(action='reset'))
     builder.adjust(1)
     return builder.as_markup()

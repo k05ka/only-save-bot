@@ -1,11 +1,14 @@
 import logging
 from functools import wraps
 from aiogram.types import Message
-from aiogram.filters import Command
-from aiogram import Router, types, Bot
+from aiogram.filters import Command, StateFilter
+from aiogram import Router, types, Bot, F
 from bot.config import BotConfig
-from keyboards import *
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from fluent.runtime import FluentLocalization
+from .states import *
+from .keyboards import *
 
 
 support_router = Router()
@@ -22,7 +25,32 @@ def admin_only(func):
             await message.answer("You don't have permissions for this action.")
     return wrapper
 
+@support_router.message(Command("support"))
+@support_router.callback_query(CallbackFactory.filter(F.action == 'continue_support_chat'))
+async def wait_support_question(
+    event: types.Message,
+    l10n: FluentLocalization,
+    state: FSMContext,
+):
+    await state.set_state(ChatForm.call_support)
+    await event.answer(text='✍️ Напишите сообщение администратору')
 
+@support_router.message(StateFilter(ChatForm.call_support))
+async def send_to_admin(
+    message: types.Message,
+    state: FSMContext,
+    l10n: FluentLocalization,
+    bot: Bot,
+    config: BotConfig
+):
+    user_message = message.text
+    text = l10n.format_value("admin-support-mesage", {'tg-id': str(message.from_user.id),
+                                                      'message-id': str(message.message_id), 
+                                                      'user-message': user_message})
+    for admin in config.admin_id:
+        await bot.send_message(chat_id=admin, text=text)
+    await message.answer(text='📨 Отправлено администратору')
+    await state.clear()
 
 @support_router.message(Command("reply"))
 @admin_only

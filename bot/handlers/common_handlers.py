@@ -5,15 +5,10 @@ from aiogram.fsm.state import State
 from fluent.runtime import FluentLocalization
 import re
 from .keyboards import *
-from .states import ChatForm
+from .states import *
 from download_engine import catch_video, compile_available_streams, download_video, cleanup_temp_files
 
 common_router = Router()
-
-class LinkFilter(BaseFilter):
-    async def __call__(self, message: types.Message) -> bool:
-        pattern = r'(https?://)?(www\.)?(youtube\.com|youtu\.be)/'
-        return bool(re.search(pattern, message.text))
 
 @common_router.message(CommandStart())
 async def cmd_start(
@@ -33,30 +28,6 @@ async def cmd_info(
     await event.answer(text=l10n.format_value('info-text'))
     await state.clear()
 
-@common_router.message(Command(commands='support'))
-async def cmd_support(
-    event: types.Message, 
-    state: FSMContext, 
-    l10n: FluentLocalization
-    ):
-    await event.answer_sticker("CAACAgIAAxkBAAENykhnrxsHiI0NWfXgsMPyAUn4oQrtiQACLQADG1o7GKSmXmJ3hiSdNgQ")
-    await state.clear()
-
-@common_router.callback_query(CallbackFactory.filter(F.action == 'technical_banner'))
-@common_router.callback_query(CallbackFactory.filter(F.action == 'support_chat'))
-@common_router.callback_query(CallbackFactory.filter(F.action == 'donate'))
-@common_router.message(Command(commands='donate'))
-async def cmd_technical(
-    event: types.CallbackQuery | types.Message,
-    state: FSMContext, 
-    l10n: FluentLocalization   
-):
-    await state.clear()
-    if isinstance(event, types.Message):
-        await event.answer(text=l10n.format_value('technical-banner'))
-    elif isinstance(event, types.CallbackQuery):
-        await event.message.answer(text=l10n.format_value('technical-banner'))
-        await event.answer()
 
 @common_router.callback_query(CallbackFactory.filter(F.action == 'reset'))
 async def cmd_reset(
@@ -68,7 +39,6 @@ async def cmd_reset(
     await event.message.answer(text=l10n.format_value('reset-banner'))
     await event.answer()
 
-
 @common_router.callback_query(CallbackFactory.filter(F.action == 'finish'))
 async def cmd_reset(
     event: types.CallbackQuery,
@@ -78,7 +48,6 @@ async def cmd_reset(
     await state.clear()
     await event.message.answer(text=l10n.format_value('finish-banner'))
     await event.answer()
-
 
 @common_router.message(
     F.text.lower().contains('youtube.com') | 
@@ -129,31 +98,31 @@ async def callback_send_video(
             l10n.format_value('sending-video', {'resolution': selected_resolution})
         )
 
-        with open(video_path, 'rb') as video_file:
-            await callback.message.answer_video(
-                reply_markup=complete_fab(),
-                video=types.FSInputFile(video_path),
-                width=width, height=height, supports_streaming=True,
-                caption=l10n.format_value('video-ready', {
-                    'title': data.get('video_title'),
-                    'resolution': selected_resolution
-                }), 
-            )
+        await callback.message.answer_video(
+            reply_markup=complete_fab(),
+            video=types.FSInputFile(video_path),
+            width=width, height=height, supports_streaming=True,
+            caption=l10n.format_value('video-ready', {
+                'title': data.get('video_title'),
+                'resolution': selected_resolution
+            }), 
+        )
         
         await progress_message.delete()
         await state.clear()
         cleanup_temp_files()
             
     except Exception as e:
-        print(e)
         await progress_message.edit_text(
             l10n.format_value('error-downloading', {'error': str(e)})
         )
         await state.clear()
 
-@common_router.message(F)  
-async def unrecognized_message(
-    event: types.Message, 
-    l10n: FluentLocalization
-    ):
-    await event.answer(text=l10n.format_value('other-messages'))
+# @common_router.message(F)  
+# async def unrecognized_message(
+#     event: types.Message, 
+#     state: FSMContext,
+#     l10n: FluentLocalization
+#     ):
+#     await event.answer(text=l10n.format_value('other-messages'))
+#     await state.clear()
