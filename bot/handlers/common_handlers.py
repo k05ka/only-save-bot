@@ -133,7 +133,7 @@ async def callback_send_video(
             await callback.message.answer_video(
                 reply_markup=complete_fab(),
                 video=types.FSInputFile(video_path),
-                width= width, height=height, supports_streaming=True,
+                width=width, height=height, supports_streaming=True,
                 caption=l10n.format_value('video-ready', {
                     'title': data.get('video_title'),
                     'resolution': selected_resolution
@@ -145,6 +145,7 @@ async def callback_send_video(
         cleanup_temp_files()
             
     except Exception as e:
+        print(e)
         await progress_message.edit_text(
             l10n.format_value('error-downloading', {'error': str(e)})
         )

@@ -77,7 +77,7 @@ def merge_streams(video, audio):
 
 async def download_video(stream, user_id, url):
     loop = asyncio.get_event_loop()
-    width, height = stream.height, stream.width
+    width, height = stream.width, stream.height
     if stream.video_codec and stream.audio_codec:
         filename = await loop.run_in_executor(executor, download_sync, stream, user_id)
     else:
@@ -97,3 +97,10 @@ def cleanup_temp_files():
                 os.remove(os.path.join(temp_dir, file))
     except Exception as e:
         logging.info(f"Ошибка при очистке временных файлов: {e}")
+
+
+youtube = YouTube(url='https://www.youtube.com/shorts/yZYhiiEWWEM')
+for i,v in enumerate(youtube.streams.filter(res='720p')):
+    print(i, v)
+    print(v.height)
+    print(v.width)
