@@ -23,7 +23,7 @@ def download_reels(url):
     download_info = reel.media_download()
     meta_data = next(iter(download_info.values()))
     filepath = meta_data['Media Data'][0]['Link']
-    print(filepath)
+    return filepath
 
 
 def cleanup_temp_post():
@@ -40,10 +40,6 @@ def cleanup_temp_post():
 
 
 def main():
-    download_reels(url='https://www.instagram.com/reel/DVTo7R4DNO8/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==')
-
-    time.sleep(3)
-    cleanup_temp_post()
     pass
 
 
