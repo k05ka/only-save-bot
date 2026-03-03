@@ -7,6 +7,7 @@ import re
 from .keyboards import *
 from .states import *
 from yt_download_engine import catch_video, compile_available_streams, download_video, cleanup_temp_files
+from inst_download_engine import catch_reel, download_reels, cleanup_temp_post
 
 common_router = Router()
 
@@ -53,7 +54,7 @@ async def cmd_reset(
     F.text.lower().contains('youtube.com') | 
     F.text.lower().contains('youtu.be')
 )
-async def message_with_link(
+async def message_with_yt_link(
     event: types.Message, 
     state: FSMContext, 
     l10n: FluentLocalization
@@ -87,7 +88,7 @@ async def callback_send_video(
     selected_stream = streams.get(selected_resolution)
     
     progress_message = await callback.message.answer(
-        l10n.format_value('downloading-video', {'resolution': selected_resolution})
+        l10n.format_value('downloading-video')
     )
     await callback.message.delete()
     await callback.answer()
@@ -95,7 +96,7 @@ async def callback_send_video(
         video_path, width, height = await download_video(selected_stream, callback.from_user.id, data.get('url'))
         
         await progress_message.edit_text(
-            l10n.format_value('sending-video', {'resolution': selected_resolution})
+            l10n.format_value('sending-video')
         )
 
         await callback.message.answer_video(
@@ -117,6 +118,46 @@ async def callback_send_video(
             l10n.format_value('error-downloading', {'error': str(e)})
         )
         await state.clear()
+
+@common_router.message(
+    F.text.lower().contains('www.instagram.com') | 
+    F.text.lower().contains('instagram.com')
+)
+async def message_with_inst_link(
+    event: types.Message, 
+    state: FSMContext, 
+    l10n: FluentLocalization
+    ):
+    if catch_reel(url=event.text):
+        try:
+            progress_message = await event.answer(
+        l10n.format_value('downloading-video')
+    )
+            video_path = await download_reels(event.from_user.id, event.text)
+            
+            await progress_message.edit_text(
+                l10n.format_value('sending-video')
+            )
+
+            await event.answer_video(
+                reply_markup=complete_fab(),
+                video=types.FSInputFile(video_path),
+                supports_streaming=True,
+                caption=l10n.format_value('reels-ready')
+                )
+            
+            await progress_message.delete()
+            await state.clear()
+            cleanup_temp_post()
+                
+        except Exception as e:
+            await progress_message.edit_text(
+                l10n.format_value('error-downloading', {'error': str(e)})
+            )
+            await state.clear()
+    else:
+        await event.answer(l10n.format_value('message-bad-link'))
+    await state.clear()
 
 # @common_router.message(F)  
 # async def unrecognized_message(

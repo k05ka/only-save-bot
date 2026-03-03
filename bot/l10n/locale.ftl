@@ -26,8 +26,8 @@ info-text =
     Сейчас доступно скачивание видео в форматах 360/480/720/FullHD, работа с 2K/4K ведется...
 
     2️⃣ Instagram
-    🔧 In progress.. 
-    
+    Получаем максимальное доступное качество Reels, без watermark, но только с неприватных аккаунтов.
+
     3️⃣ TikTok
     🔧 In progress.. 
 
@@ -70,15 +70,18 @@ payment-successful =
     возврата звезд
 
 downloading-video = 
-    ⬇️ Скачиваю видео в качестве { $resolution }...
+    ⬇️ Скачиваю видео...
 
 sending-video = 
-    📤 Отправляю видео в качестве { $resolution }...
+    📤 Отправляю видео...
 
 video-ready = 
     ✅ Видео готово!
     Название: <b>{$title}</b>
     Качество: <b>{ $resolution }</b>
+
+reels-ready = 
+    ✅ Видео готово!
 
 error-downloading = 
     ❌ Download error: { $error }
