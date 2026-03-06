@@ -8,6 +8,7 @@ from .keyboards import *
 from .states import *
 from yt_download_engine import catch_video, compile_available_streams, download_video, cleanup_temp_files
 from inst_download_engine import catch_reel, download_reels, cleanup_temp_post
+from tt_download_engine import catch_tiktok, download_async_tiktok, cleanup_temp_tiktok
 
 common_router = Router()
 
@@ -143,7 +144,7 @@ async def message_with_inst_link(
                 reply_markup=complete_fab(),
                 video=types.FSInputFile(video_path),
                 supports_streaming=True,
-                caption=l10n.format_value('reels-ready')
+                caption=l10n.format_value('post-ready')
                 )
             
             await progress_message.delete()
@@ -158,6 +159,48 @@ async def message_with_inst_link(
     else:
         await event.answer(l10n.format_value('message-bad-link'))
     await state.clear()
+
+@common_router.message(
+    F.text.lower().contains('www.tiktok.com') | 
+    F.text.lower().contains('tiktok.com')
+)
+async def message_with_inst_link(
+    event: types.Message, 
+    state: FSMContext, 
+    l10n: FluentLocalization
+    ):
+    if catch_tiktok(url=event.text):
+        try:
+            progress_message = await event.answer(
+        l10n.format_value('downloading-video')
+    )
+            video_path = await download_async_tiktok(event.from_user.id, event.text)
+            
+            await progress_message.edit_text(
+                l10n.format_value('sending-video')
+            )
+
+            await event.answer_video(
+                reply_markup=complete_fab(),
+                video=types.FSInputFile(video_path),
+                supports_streaming=True,
+                caption=l10n.format_value('post-ready')
+                )
+            
+            await progress_message.delete()
+            await state.clear()
+            cleanup_temp_tiktok()
+                
+        except Exception as e:
+            await progress_message.edit_text(
+                l10n.format_value('error-downloading', {'error': str(e)})
+            )
+            await state.clear()
+    else:
+        await event.answer(l10n.format_value('message-bad-link'))
+    await state.clear()
+
+
 
 # @common_router.message(F)  
 # async def unrecognized_message(

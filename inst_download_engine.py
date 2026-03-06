@@ -9,6 +9,8 @@ from concurrent.futures import ThreadPoolExecutor
 logging.basicConfig(level=logging.INFO)
 
 executor = ThreadPoolExecutor(max_workers=4)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MEDIA_DIR = os.path.join(BASE_DIR, 'media', 'instagram')
 
 def catch_reel(url):
     try:
@@ -21,12 +23,17 @@ def catch_reel(url):
         return False
 
 def download_post(url, user_id):
+    os.makedirs(MEDIA_DIR, exist_ok=True) 
     reel = InstaPost()
     reel.reel_id = url
     download_info = reel.media_download()
     meta_data = next(iter(download_info.values()))
     filepath = meta_data['Media Data'][0]['Link']
-    return filepath
+    filename = os.path.basename(filepath)
+    new_path = os.path.join(MEDIA_DIR, filename)
+    shutil.move(filepath, new_path)
+
+    return new_path
     
 async def download_reels(user_id, url):
     loop = asyncio.get_event_loop()
@@ -35,21 +42,19 @@ async def download_reels(user_id, url):
 
 
 def cleanup_temp_post():
-    temp_dir = f"post"
+    temp_dir = f"media/instagram"
+    instacapture_dir = 'post'
     try:
         if os.path.exists(temp_dir):
             for file in os.listdir(temp_dir):
-                if os.path.isdir(f'{temp_dir}/{file}'):
-                    shutil.rmtree(os.path.join(temp_dir, file))
-                elif os.path.isfile(f'{temp_dir}/{file}'):
-                    os.remove(os.path.join(temp_dir, file))
+                os.remove(os.path.join(temp_dir, file))
+        shutil.rmtree(os.path.join(instacapture_dir))
     except Exception as e:
         logging.info(f"Ошибка при очистке временных файлов: {e}")
 
 
 def main():
-    url = 'https://www.instagram.com/reel/DVY7o4Qjf3y/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA=='
-    download_reels(url=url, user_id='1')
+    download_reels(url='url', user_id='1')
 
 
 if __name__ == '__main__':

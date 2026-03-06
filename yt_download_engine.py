@@ -5,17 +5,16 @@ import ffmpeg
 from concurrent.futures import ThreadPoolExecutor
 import logging
 
-TARGET_RES = ['360p', '480p', '720p', '1080p', '1440p', '2160p']
 logging.basicConfig(level=logging.INFO)
 
+executor = ThreadPoolExecutor(max_workers=4)
+TARGET_RES = ['360p', '480p', '720p', '1080p', '1440p', '2160p']
 vcodec_priority = {
     'vp09': 0,
     'avc1': 1,  
     'av01': 2,
     'vp9': 0,
 }
-
-executor = ThreadPoolExecutor(max_workers=4)
 
 
 def catch_video(url):
@@ -51,7 +50,7 @@ def compile_available_streams(url):
 
 def download_sync(stream, user_id):
     try:
-        temp_dir = f"media"
+        temp_dir = f"media/youtube"
         os.makedirs(temp_dir, exist_ok=True)
         filename = stream.download(output_path=temp_dir)
         return filename
@@ -90,7 +89,7 @@ async def download_video(stream, user_id, url):
 
 
 def cleanup_temp_files():
-    temp_dir = f"media"
+    temp_dir = f"media/youtube"
     try:
         if os.path.exists(temp_dir):
             for file in os.listdir(temp_dir):

@@ -9,10 +9,9 @@ from bot.handlers.support_handlers import support_router
 from bot.middlewares import L10nMiddleware
 from bot.fluent_loader import get_fluent_localization
 
-# Enable console logging
 logging.basicConfig(level=logging.INFO)
 
-# Register function for including custom handlers
+
 def register_routes(dp: Dispatcher) -> None:
     """
     Register routers for the dispatcher.
@@ -28,7 +27,7 @@ async def set_commands():
     """
     commands = [
         BotCommand(command='start', description='🏁 В начало'),
-        BotCommand(command='info', description='🆔 Информация'),
+        BotCommand(command='info', description='💡 Информация'),
         BotCommand(command='donate', description='⭐️ Поддержать проект'),
         BotCommand(command='support', description='🛟 Помощь'),
     ]

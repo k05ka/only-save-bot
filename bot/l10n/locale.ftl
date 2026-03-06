@@ -80,7 +80,7 @@ video-ready =
     Название: <b>{$title}</b>
     Качество: <b>{ $resolution }</b>
 
-reels-ready = 
+post-ready = 
     ✅ Видео готово!
 
 error-downloading = 
