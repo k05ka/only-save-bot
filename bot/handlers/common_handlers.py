@@ -6,9 +6,9 @@ from fluent.runtime import FluentLocalization
 import re
 from .keyboards import *
 from .states import *
-from yt_download_engine import catch_video, compile_available_streams, download_video, cleanup_temp_files
-from inst_download_engine import catch_reel, download_reels, cleanup_temp_post
-from tt_download_engine import catch_tiktok, download_async_tiktok, cleanup_temp_tiktok
+from downloaders.yt_download_engine import catch_video, compile_available_streams, download_video, cleanup_temp_files
+from downloaders.inst_download_engine import catch_reel, download_reels, cleanup_temp_post
+from downloaders.tt_download_engine import catch_tiktok, download_async_tiktok, cleanup_temp_tiktok
 
 common_router = Router()
 
