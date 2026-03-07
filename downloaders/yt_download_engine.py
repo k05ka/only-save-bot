@@ -16,6 +16,9 @@ vcodec_priority = {
     'vp9': 0,
 }
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MEDIA_DIR = os.path.join(BASE_DIR, 'media', 'youtube')
+
 
 def catch_video(url):
     try:
@@ -50,9 +53,8 @@ def compile_available_streams(url):
 
 def download_sync(stream, user_id):
     try:
-        temp_dir = f"media/youtube"
-        os.makedirs(temp_dir, exist_ok=True)
-        filename = stream.download(output_path=temp_dir)
+        os.makedirs(MEDIA_DIR, exist_ok=True)
+        filename = stream.download(output_path=MEDIA_DIR)
         return filename
     except Exception as e:
         raise Exception(f"Ошибка при скачивании: {str(e)}")
@@ -89,11 +91,12 @@ async def download_video(stream, user_id, url):
 
 
 def cleanup_temp_files():
-    temp_dir = f"media/youtube"
     try:
-        if os.path.exists(temp_dir):
-            for file in os.listdir(temp_dir):
-                os.remove(os.path.join(temp_dir, file))
+        if os.path.exists(MEDIA_DIR):
+            for file in os.listdir(MEDIA_DIR):
+                file_path = os.path.join(MEDIA_DIR, file)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
     except Exception as e:
         logging.info(f"Ошибка при очистке временных файлов: {e}")
 

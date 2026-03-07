@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 logging.basicConfig(level=logging.INFO)
 
 executor = ThreadPoolExecutor(max_workers=4)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_DIR = os.path.join(BASE_DIR, 'media', 'instagram')
 
 def catch_reel(url):
@@ -42,13 +42,14 @@ async def download_reels(user_id, url):
 
 
 def cleanup_temp_post():
-    temp_dir = f"media/instagram"
-    instacapture_dir = 'post'
+    temp_dir = MEDIA_DIR 
+    instacapture_dir = os.path.join(BASE_DIR, 'post')
     try:
         if os.path.exists(temp_dir):
             for file in os.listdir(temp_dir):
                 os.remove(os.path.join(temp_dir, file))
-        shutil.rmtree(os.path.join(instacapture_dir))
+        if os.path.exists(instacapture_dir):
+            shutil.rmtree(instacapture_dir)
     except Exception as e:
         logging.info(f"Ошибка при очистке временных файлов: {e}")
 

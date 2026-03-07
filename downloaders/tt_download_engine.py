@@ -10,14 +10,15 @@ logging.basicConfig(level=logging.INFO)
 
 executor = ThreadPoolExecutor(max_workers=4)
 rx_file = re.compile(r'tiktok\.com\/(?P<name>(@(.+\/){2}\d+|[a-zA-Z0-9]+(\/|)))(\?.+|)')
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_DIR = os.path.join(BASE_DIR, 'media', 'tiktok')
 
 
 def catch_tiktok(url):
     try:
-        pyktok.save_tiktok(video_url=url, save_video=False, metadata_fn='media/tiktok/probe.csv')
-        return os.path.exists('media/tiktok/probe.csv')
+        probe_path = os.path.join(BASE_DIR, 'media', 'tiktok', 'probe.csv')
+        pyktok.save_tiktok(video_url=url, save_video=False, metadata_fn=probe_path)
+        return os.path.exists(probe_path)
     except:
         return False
 
@@ -26,12 +27,18 @@ def download_tiktok(url, user_id):
     os.makedirs(MEDIA_DIR, exist_ok=True) 
     filepath_re = rx_file.search(url).group('name')
     filepath = re.sub(r'\/', '_', filepath_re) + '.mp4'
-    pyktok.save_tiktok(video_url=url, save_video=True, metadata_fn='media/tiktok/probe.csv')
-    filename = os.path.basename(filepath)
-    new_path = os.path.join(MEDIA_DIR, filename)
-    shutil.move(filepath, new_path)
-
-    return new_path
+    
+    local_filepath = os.path.join(os.getcwd(), filepath)
+    
+    probe_path = os.path.join(BASE_DIR, 'media', 'tiktok', 'probe.csv')
+    pyktok.save_tiktok(video_url=url, save_video=True, metadata_fn=probe_path)
+    
+    if os.path.exists(local_filepath):
+        new_path = os.path.join(MEDIA_DIR, filepath)
+        shutil.move(local_filepath, new_path)
+        return new_path
+    
+    return None
 
 
 async def download_async_tiktok(user_id, url):
@@ -41,11 +48,13 @@ async def download_async_tiktok(user_id, url):
     
 
 def cleanup_temp_tiktok():
-    temp_dir = f"media/tiktok"
+    temp_dir = MEDIA_DIR
     try:
         if os.path.exists(temp_dir):
             for file in os.listdir(temp_dir):
-                os.remove(os.path.join(temp_dir, file))
+                file_path = os.path.join(temp_dir, file)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
     except Exception as e:
         logging.info(f"Ошибка при очистке временных файлов: {e}")
 
