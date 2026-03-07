@@ -15,9 +15,9 @@ def video_res_fab(res):
             if r == '1080p':
                 builder.button(text='Full HD', callback_data=CallbackFactory(action='choose_resolution', str_value='1080p'))
             elif r == '1440p':
-                builder.button(text='QHD', callback_data=CallbackFactory(action='technical_banner', str_value='1440p'))
+                builder.button(text='QHD', callback_data=CallbackFactory(action='choose_resolution', str_value='1440p'))
             elif r == '2160p':
-                builder.button(text='4K', callback_data=CallbackFactory(action='technical_banner', str_value='2160p'))
+                builder.button(text='4K', callback_data=CallbackFactory(action='choose_resolution', str_value='2160p'))
             else:
                 builder.button(text=r, callback_data=CallbackFactory(action='choose_resolution', str_value=r))
     builder.button(text='🔄 Reset', callback_data=CallbackFactory(action='reset'))
