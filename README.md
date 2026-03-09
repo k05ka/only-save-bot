@@ -20,7 +20,7 @@ git clone https://github.com/k05ka/only-save-bot.git
 # rename bot dir if neded
 cd only-save-bot
 ```
-### Install python packages
+### Install python packages (create and use venv before it)
 ```bash
 pip install -r requirements.txt
 ```
