@@ -54,6 +54,8 @@ def compile_available_streams(url):
 def download_sync(stream, user_id):
     try:
         os.makedirs(MEDIA_DIR, exist_ok=True)
+        if stream.filesize >= 1932735283:
+            raise Exception(f'Слишком большой размер файла: {stream.filesize // 1024 // 1024} Mb')
         filename = stream.download(output_path=MEDIA_DIR)
         return filename
     except Exception as e:
