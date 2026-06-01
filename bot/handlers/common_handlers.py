@@ -129,42 +129,45 @@ async def message_with_inst_link(
     state: FSMContext, 
     l10n: FluentLocalization
     ):
-    if catch_reel(url=event.text):
-        try:
-            progress_message = await event.answer(
-        l10n.format_value('downloading-video')
-    )
-            video_path = await download_reels(event.from_user.id, event.text)
-            
-            await progress_message.edit_text(
-                l10n.format_value('sending-video')
-            )
+    # await event.answer(text=l10n.format_value('other-messages'))
+    # await state.clear()
+    # if catch_reel(url=event.text):
+    try:
+        progress_message = await event.answer(
+    l10n.format_value('downloading-video')
+)
+        video_path, width, height = await download_reels(event.from_user.id, event.text)
+        
+        await progress_message.edit_text(
+            l10n.format_value('sending-video')
+        )
 
-            await event.answer_video(
-                reply_markup=complete_fab(),
-                video=types.FSInputFile(video_path),
-                supports_streaming=True,
-                caption=l10n.format_value('post-ready')
-                )
-            
-            await progress_message.delete()
-            await state.clear()
-            cleanup_temp_post()
-                
-        except Exception as e:
-            await progress_message.edit_text(
-                l10n.format_value('error-downloading', {'error': str(e)})
+        await event.answer_video(
+            reply_markup=complete_fab(),
+            video=types.FSInputFile(video_path),
+            width=width, height=height,
+            supports_streaming=True,
+            caption=l10n.format_value('post-ready')
             )
-            await state.clear()
-    else:
-        await event.answer(l10n.format_value('message-bad-link'))
-    await state.clear()
+        
+        await progress_message.delete()
+        await state.clear()
+        cleanup_temp_post()
+            
+    except Exception as e:
+        await progress_message.edit_text(
+            l10n.format_value('error-downloading', {'error': str(e)})
+        )
+        await state.clear()
+    # else:
+    #     await event.answer(l10n.format_value('message-bad-link'))
+    # await state.clear()
 
 @common_router.message(
     F.text.lower().contains('www.tiktok.com') | 
     F.text.lower().contains('tiktok.com')
 )
-async def message_with_inst_link(
+async def message_with_tt_link(
     event: types.Message, 
     state: FSMContext, 
     l10n: FluentLocalization
@@ -174,7 +177,7 @@ async def message_with_inst_link(
             progress_message = await event.answer(
         l10n.format_value('downloading-video')
     )
-            video_path = await download_async_tiktok(event.from_user.id, event.text)
+            video_path, width, height = await download_async_tiktok(event.from_user.id, event.text)
             
             await progress_message.edit_text(
                 l10n.format_value('sending-video')
@@ -183,6 +186,7 @@ async def message_with_inst_link(
             await event.answer_video(
                 reply_markup=complete_fab(),
                 video=types.FSInputFile(video_path),
+                width=width, height=height,
                 supports_streaming=True,
                 caption=l10n.format_value('post-ready')
                 )

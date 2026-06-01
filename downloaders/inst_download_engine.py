@@ -1,6 +1,7 @@
 from instacapture import InstaPost
 import os 
 import logging
+import ffmpeg
 import time
 import shutil
 import asyncio
@@ -38,7 +39,11 @@ def download_post(url, user_id):
 async def download_reels(user_id, url):
     loop = asyncio.get_event_loop()
     filename = await loop.run_in_executor(executor, download_post, url, user_id)
-    return filename
+    video = ffmpeg.probe(filename)
+    stream = next((s for s in video['streams'] if s['codec_type'] == 'video'), None)
+    width, height = stream['width'], stream['height']
+
+    return filename, width, height
 
 
 def cleanup_temp_post():
