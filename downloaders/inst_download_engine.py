@@ -31,7 +31,7 @@ def download_post(url, user_id):
     os.makedirs(MEDIA_DIR, exist_ok=True) 
     
     ydl_opts = {
-        'format': 'bestvideo+bestaudio/best',
+        'format': 'bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best',
         'outtmpl': os.path.join(MEDIA_DIR, '%(title)s.%(ext)s'),
         'merge_output_format': 'mp4',
         'cookiefile': COOKIE_FILE,
