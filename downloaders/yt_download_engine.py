@@ -22,7 +22,7 @@ MEDIA_DIR = os.path.join(BASE_DIR, 'media', 'youtube')
 
 def catch_video(url):
     try:
-        youtube = YouTube(url=url)
+        youtube = YouTube(url=url, client='WEB')
         return youtube.streams is not None
     except:
         return False
@@ -30,7 +30,7 @@ def catch_video(url):
     
 def compile_available_streams(url):
     possible_video_streams = {}
-    youtube = YouTube(url=url)
+    youtube = YouTube(url=url, client='WEB')
     possible_video_streams['title'] = youtube.title
     possible_video_streams['resolutions'] = {}
     
@@ -84,7 +84,7 @@ async def download_video(stream, user_id, url):
     if stream.video_codec and stream.audio_codec:
         filename = await loop.run_in_executor(executor, download_sync, stream, user_id)
     else:
-        audio_stream = YouTube(url=url).streams.get_audio_only()
+        audio_stream = YouTube(url=url, client='WEB').streams.get_audio_only()
         video_stream = stream
         video_filename = await loop.run_in_executor(executor, download_sync, video_stream, user_id)
         audio_filename = await loop.run_in_executor(executor, download_sync, audio_stream, user_id)
