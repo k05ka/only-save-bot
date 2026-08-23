@@ -24,6 +24,7 @@ frozenlist==1.8.0
 future==1.0.0
 gitdb==4.0.12
 GitPython==3.1.46
+google==3.0.0
 greenlet==3.3.2
 h11==0.16.0
 httpcore==1.0.9
@@ -45,6 +46,7 @@ nodejs-wheel-binaries==24.13.1
 numpy==2.4.2
 packaging==26.0
 pandas==2.3.3
+parth-dl==1.0.1
 pillow==12.1.1
 playwright==1.58.0
 propcache==0.4.1
@@ -59,7 +61,7 @@ pyee==13.0.1
 pyktok==0.0.31
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
-pytubefix==10.3.8
+pytubefix==10.11.0
 pytz==2025.2
 referencing==0.37.0
 requests==2.32.5
@@ -78,3 +80,4 @@ tzdata==2025.3
 urllib3==2.6.3
 watchdog==6.0.0
 yarl==1.22.0
+yt-dlp==2026.8.19
