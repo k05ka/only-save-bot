@@ -73,18 +73,18 @@ payment-successful =
     возврата звезд
 
 downloading-video = 
-    ⬇️ Скачиваю видео...
+    ⬇️ Скачиваю файл...
 
 sending-video = 
-    📤 Отправляю видео...
+    📤 Отправляю файл...
 
 video-ready = 
-    ✅ Видео готово!
+    ✅ Файл готов!
     Название: <b>{$title}</b>
-    Качество: <b>{ $resolution }</b>
+    Качество: {$property}
 
 post-ready = 
-    ✅ Видео готово!
+    ✅ Файл готов!
 
 error-downloading = 
     ❌ Download error: { $error }

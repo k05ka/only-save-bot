@@ -1,14 +1,16 @@
-from pytubefix import YouTube
 import os
 import asyncio
 import ffmpeg
 from concurrent.futures import ThreadPoolExecutor
 import logging
 
+import yt_dlp
+
 logging.basicConfig(level=logging.INFO)
 
 executor = ThreadPoolExecutor(max_workers=4)
-TARGET_RES = ['360p', '480p', '720p', '1080p', '1440p', '2160p']
+TARGET_RES = {'360p': '640x360', '480p': '854x480', '720p': '1280x720', 
+              '1080p': '1920x1080', '1440p': '2560x1440', '2160p': '3840x2160'}
 vcodec_priority = {
     'vp09': 0,
     'avc1': 1,  
@@ -18,56 +20,55 @@ vcodec_priority = {
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_DIR = os.path.join(BASE_DIR, 'media', 'youtube')
-
-
-def catch_video(url):
-    try:
-        youtube = YouTube(url=url, client='WEB')
-        return youtube.streams is not None
-    except:
-        return False
     
     
 def compile_available_streams(url):
-    possible_video_streams = {}
-    youtube = YouTube(url=url, client='WEB')
-    possible_video_streams['title'] = youtube.title
-    possible_video_streams['resolutions'] = {}
-    
-    for res in TARGET_RES:
-        res_stream = youtube.streams.filter(res=res, file_extension='mp4')
+    video_formats = []
+    audio_formats = []
+    ydl_opts = {'quiet': True}
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url=url, download=False)
+        formats = info.get('formats')
+        title = info.get('title')
+        for _ in formats:
+            if _.get('ext') == 'mp4' and _.get('protocol') == 'https':
+                video_formats.append({'format_id': _.get('format_id'),
+                                    'format': _.get('format'),
+                                    'vcodec': _.get('vcodec'),
+                                    'height': _.get('height'),
+                                    'width': _.get('width'),
+                                    'ext': _.get('ext'),
+                                    'filesize': _.get('filesize')})
+            elif _.get('ext') == 'm4a' and 'default' in _.get('format_note'):
+                audio_formats.append({'format_id': _.get('format_id'),
+                                      'format': _.get('format'),
+                                      'acodec': _.get('acodec'),
+                                      'ext': _.get('ext'),
+                                      'filesize': _.get('filesize')})
+
+    possible_streams = {}
+    possible_streams['title'] = title
+    possible_streams['resolutions'] = {}
+    for k,v in TARGET_RES.items():
+        res_formats = [x for x in video_formats if k in x.get('format')]
         candidate = None
         for codec in ['vp9', 'avc1', 'av01']:
             try:
-                candidate = next(x for x in res_stream if codec in x.video_codec)
+                candidate = next(x for x in res_formats if codec in x['vcodec'])
                 break
             except StopIteration:
                 continue
-        if not candidate and res_stream:
-            candidate = res_stream.first()
-        if candidate:
-            possible_video_streams['resolutions'][res] = candidate
+        possible_streams['resolutions'][k] = candidate or res_formats[0]
+    possible_streams['resolutions']['audio'] = audio_formats[-1]
 
-    return possible_video_streams
-
-
-def download_sync(stream, user_id):
-    try:
-        os.makedirs(MEDIA_DIR, exist_ok=True)
-        if stream.filesize >= 1932735283:
-            raise Exception(f'Слишком большой размер файла: {stream.filesize // 1024 // 1024} Mb')
-        filename = stream.download(output_path=MEDIA_DIR)
-        return filename
-    except Exception as e:
-        raise Exception(f"Ошибка при скачивании: {str(e)}")
+    return possible_streams
     
 
-def merge_streams(video, audio):
+def merge_audio_and_video(video, audio):
     output_path = video[:-3]+'_merged.mp4'
     video = ffmpeg.input(video)
     audio = ffmpeg.input(audio)
     
-
     ffmpeg.output(video['v'], 
                   audio['a'], 
                   output_path, 
@@ -78,18 +79,33 @@ def merge_streams(video, audio):
     return output_path
 
 
-async def download_video(stream, user_id, url):
-    loop = asyncio.get_event_loop()
-    width, height = stream.width, stream.height
-    if stream.video_codec and stream.audio_codec:
-        filename = await loop.run_in_executor(executor, download_sync, stream, user_id)
-    else:
-        audio_stream = YouTube(url=url, client='WEB').streams.get_audio_only()
-        video_stream = stream
-        video_filename = await loop.run_in_executor(executor, download_sync, video_stream, user_id)
-        audio_filename = await loop.run_in_executor(executor, download_sync, audio_stream, user_id)
-        filename = merge_streams(video_filename, audio_filename)
-    return filename, width, height
+def download_sync(stream, user_id, url, title):
+    os.makedirs(MEDIA_DIR, exist_ok=True)
+    ydl_opts = {
+        'format': stream.get('format_id'),
+        'quiet': True,
+        'outtmpl': os.path.join(MEDIA_DIR, '%(title)s.%(ext)s')
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+    filepath = os.path.join(MEDIA_DIR, f"{title}.{stream.get('ext')}")
+    return filepath
+
+
+async def download_yt(streams, stream, user_id, url, title):
+    try:
+        loop = asyncio.get_event_loop()
+        audio_file = await loop.run_in_executor(executor, download_sync, streams.get('audio'), user_id, url, title)
+        if stream.get('ext') == 'm4a':
+            return {'file_path': audio_file}
+        elif stream.get('ext') == 'mp4':
+            if stream.get('filesize') >= 1932735283:
+                raise Exception(f'Слишком большой размер файла: {stream.filesize // 1024 // 1024} Mb')
+            video_file = await loop.run_in_executor(executor, download_sync, stream, user_id, url, title)
+            filename = merge_audio_and_video(video_file, audio_file)
+            return {'file_path': filename, 'width': stream.get('width'), 'height': stream.get('height')}
+    except Exception as e:
+        raise Exception(f"Ошибка при скачивании: {str(e)}")
 
 
 def cleanup_temp_files():

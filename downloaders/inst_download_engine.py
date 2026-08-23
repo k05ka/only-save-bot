@@ -1,8 +1,6 @@
-# from instacapture import InstaPost
 import os 
 import logging
 import ffmpeg
-# import time
 import shutil
 import asyncio
 import yt_dlp
