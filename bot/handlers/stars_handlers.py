@@ -28,15 +28,6 @@ async def cmd_technical(
         await event.answer()
     await state.set_state(ChatForm.choose_star)
 
-# @stars_router.callback_query(CallbackFactory.filter(F.action == 'choose'))
-# async def callback_choose(
-#     callback: types.CallbackQuery,
-#     state: FSMContext,
-#     l10n: FluentLocalization,
-# ):
-#     text = l10n.format_value('choose-amount')
-#     await state.set_state(ChatForm.choose_star)
-#     await callback.answer()
 
 @stars_router.callback_query(CallbackFactory.filter(F.action == 'pay'))
 async def callback_pay(
@@ -61,7 +52,7 @@ async def callback_pay(
         reply_markup=get_star_piece_fab(user_data=stars_amount)
     )
 
-
+@stars_router.callback_query(StateFilter(ChatForm.choose_star))
 @stars_router.callback_query(CallbackFactory.filter(F.action == 'choose'))
 async def callback_choose(
     callback: types.CallbackQuery,
@@ -83,7 +74,7 @@ async def message_with_amount(
 ):
     try:
         stars_amount = int(event.text)
-        if stars_amount <= 0:
+        if stars_amount <= 0 or stars_amount > 10000:
             raise ValueError("Amount must be positive")
         await state.update_data(stars=stars_amount)
         prices = [types.LabeledPrice(label="XTR", amount=stars_amount)]

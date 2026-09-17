@@ -2,6 +2,7 @@ from aiogram import Router, types, F
 from aiogram.filters import CommandStart, BaseFilter, Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
+from aiogram.loggers import event
 from fluent.runtime import FluentLocalization
 import re
 from .keyboards import *
@@ -12,14 +13,19 @@ from downloaders.tt_download_engine import catch_tiktok, download_async_tiktok, 
 
 common_router = Router()
 
+@common_router.callback_query(CallbackFactory.filter(F.action == 'on_main'))
 @common_router.message(CommandStart())
 async def cmd_start(
-    event: types.Message, 
+    event: types.Message | types.CallbackQuery, 
     state: FSMContext, 
     l10n: FluentLocalization
     ):
-    await event.answer(text=l10n.format_value('welcome-text'))
     await state.clear()
+    if isinstance(event, types.Message):
+        await event.answer(text=l10n.format_value('welcome-text'))
+    elif isinstance(event, types.CallbackQuery):
+        await event.message.answer(text=l10n.format_value('welcome-text'))
+        await event.answer()
 
 @common_router.message(Command(commands='info'))
 async def cmd_info(
@@ -30,6 +36,16 @@ async def cmd_info(
     await event.answer(text=l10n.format_value('info-text'))
     await state.clear()
 
+@common_router.message(Command("support"))
+@common_router.callback_query(CallbackFactory.filter(F.action == 'continue_support_chat'))
+async def wait_support_question(
+    event: types.Message,
+    l10n: FluentLocalization,
+    state: FSMContext,
+):
+    await state.clear()
+    await state.set_state(ChatForm.call_support)
+    await event.answer(text='✍️ Напишите сообщение администратору')
 
 @common_router.callback_query(CallbackFactory.filter(F.action == 'reset'))
 async def cmd_reset(
@@ -163,9 +179,6 @@ async def message_with_inst_link(
             l10n.format_value('error-downloading', {'error': str(e)})
         )
         await state.clear()
-    # else:
-    #     await event.answer(l10n.format_value('message-bad-link'))
-    # await state.clear()
 
 @common_router.message(
     F.text.lower().contains('www.tiktok.com') | 

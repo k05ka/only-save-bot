@@ -68,7 +68,7 @@ def get_support_fab():
 def get_continue_support_fab():
     builder = InlineKeyboardBuilder()
     builder.button(text="✉️Написать сообщение", callback_data=CallbackFactory(action='continue_support_chat'))
-    builder.button(text='❎ Закрыть вопрос', callback_data=CallbackFactory(action='reset'))
+    builder.button(text='❎ Закрыть вопрос', callback_data=CallbackFactory(action='finish_support'))
     builder.adjust(1)
     return builder.as_markup()
 

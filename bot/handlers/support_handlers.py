@@ -25,15 +25,6 @@ def admin_only(func):
             await message.answer("You don't have permissions for this action.")
     return wrapper
 
-@support_router.message(Command("support"))
-@support_router.callback_query(CallbackFactory.filter(F.action == 'continue_support_chat'))
-async def wait_support_question(
-    event: types.Message,
-    l10n: FluentLocalization,
-    state: FSMContext,
-):
-    await state.set_state(ChatForm.call_support)
-    await event.answer(text='✍️ Напишите сообщение администратору')
 
 @support_router.message(StateFilter(ChatForm.call_support))
 async def send_to_admin(
@@ -79,3 +70,14 @@ async def cmd_reply_support_question(
         await message.answer("❌ Неверный формат ID")
     except Exception as e:
         await message.answer(f"🚫 Ошибка: {str(e)}")
+
+
+@support_router.callback_query(CallbackFactory.filter(F.action == 'finish_support'))
+async def callback_finish_support(
+    callback: types.CallbackQuery,
+    state: FSMContext,
+    l10n: FluentLocalization,
+):
+    await state.clear()
+    await callback.message.answer(text=l10n.format_value('support-finish'))
+    await callback.answer()
