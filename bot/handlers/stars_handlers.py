@@ -28,13 +28,23 @@ async def cmd_technical(
         await event.answer()
     await state.set_state(ChatForm.choose_star)
 
+# @stars_router.callback_query(CallbackFactory.filter(F.action == 'choose'))
+# async def callback_choose(
+#     callback: types.CallbackQuery,
+#     state: FSMContext,
+#     l10n: FluentLocalization,
+# ):
+#     text = l10n.format_value('choose-amount')
+#     await state.set_state(ChatForm.choose_star)
+#     await callback.answer()
+
 @stars_router.callback_query(CallbackFactory.filter(F.action == 'pay'))
 async def callback_pay(
     callback: types.CallbackQuery,
     callback_data: CallbackFactory,
     state: FSMContext,
     l10n: FluentLocalization,
-):    
+):  
     await state.update_data(stars=callback_data.value)
     await callback.message.delete()
     user_data = await state.get_data()
@@ -50,6 +60,49 @@ async def callback_pay(
         currency="XTR",
         reply_markup=get_star_piece_fab(user_data=stars_amount)
     )
+
+
+@stars_router.callback_query(CallbackFactory.filter(F.action == 'choose'))
+async def callback_choose(
+    callback: types.CallbackQuery,
+    state: FSMContext,
+    l10n: FluentLocalization,
+):
+    await callback.message.delete()
+    text = l10n.format_value('choose-amount')
+    await state.set_state(ChatForm.wait_for_amount)
+    await callback.message.answer(text=text)
+    await callback.answer()
+
+
+@stars_router.message(StateFilter(ChatForm.wait_for_amount))
+async def message_with_amount(
+    event: types.Message,
+    state: FSMContext,
+    l10n: FluentLocalization,
+):
+    try:
+        stars_amount = int(event.text)
+        if stars_amount <= 0:
+            raise ValueError("Amount must be positive")
+        await state.update_data(stars=stars_amount)
+        prices = [types.LabeledPrice(label="XTR", amount=stars_amount)]
+        await event.answer_invoice(
+            title=l10n.format_value("invoice-title", {"stars_count": stars_amount}),
+            description=l10n.format_value('invoice-description'),
+            prices=prices,
+            provider_token="",
+            payload=f"{event.from_user.id}_{stars_amount}_stars",
+            currency="XTR",
+            reply_markup=get_star_piece_fab(user_data=stars_amount)
+        )
+    except ValueError:
+        await event.answer(
+            text=l10n.format_value('invalid-amount'), 
+            reply_markup=amount_reply_fab()
+        )
+        await state.set_state(ChatForm.wait_for_amount)
+
 
 @stars_router.pre_checkout_query()
 async def on_pre_checkout_query(

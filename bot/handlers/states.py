@@ -8,4 +8,5 @@ class ChatForm(StatesGroup):
     donate_success = State()
     choose_star = State()
     call_support = State()
+    wait_for_amount = State()
     

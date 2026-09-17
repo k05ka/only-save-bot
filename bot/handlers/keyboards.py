@@ -43,6 +43,7 @@ def donate_fab():
     builder.button(text='10⭐️', callback_data=CallbackFactory(action='pay', value=10))
     builder.button(text='20⭐️', callback_data=CallbackFactory(action='pay', value=20))
     builder.button(text='30⭐️', callback_data=CallbackFactory(action='pay', value=30))
+    builder.button(text='✏️ Choose', callback_data=CallbackFactory(action='choose'))
     builder.button(text='🔄 Reset', callback_data=CallbackFactory(action='reset'))
     builder.adjust(4)
     return builder.as_markup()
@@ -69,4 +70,12 @@ def get_continue_support_fab():
     builder.button(text="✉️Написать сообщение", callback_data=CallbackFactory(action='continue_support_chat'))
     builder.button(text='❎ Закрыть вопрос', callback_data=CallbackFactory(action='reset'))
     builder.adjust(1)
+    return builder.as_markup()
+
+
+def amount_reply_fab():
+    builder = InlineKeyboardBuilder()
+    builder.button(text='🔄 Try again', callback_data=CallbackFactory(action='choose'))
+    builder.button(text='🏁 На главную', callback_data=CallbackFactory(action='on_main'))
+    builder.adjust(2)
     return builder.as_markup()
