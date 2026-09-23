@@ -58,7 +58,8 @@ def compile_available_streams(url):
                 break
             except StopIteration:
                 continue
-        possible_streams['resolutions'][k] = candidate or res_formats[0]
+        if candidate or res_formats:
+            possible_streams['resolutions'][k] = candidate or res_formats[0]
     possible_streams['resolutions']['audio'] = audio_formats[-1]
 
     return possible_streams
