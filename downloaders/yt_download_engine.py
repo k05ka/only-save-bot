@@ -39,7 +39,7 @@ def compile_available_streams(url):
                                     'width': _.get('width'),
                                     'ext': _.get('ext'),
                                     'filesize': _.get('filesize')})
-            elif _.get('ext') == 'm4a' and 'default' in _.get('format_note'):
+            elif _.get('ext') == 'm4a' and ('default' in _.get('format_note') or 'audio only' in _.get('format')):
                 audio_formats.append({'format_id': _.get('format_id'),
                                       'format': _.get('format'),
                                       'acodec': _.get('acodec'),
